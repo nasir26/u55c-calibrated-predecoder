@@ -1,0 +1,5 @@
+pm_cal        1613 8.065e-03
+pm_median     1613 8.065e-03
+fast_fp32     1653 8.265e-03
+fast_int8     1611 8.055e-03
+wrote /home/qacc/jsc_revision_2026/calibrated_decoder/results/ler/ibm_torino_median0_s0.5_d3_r3_X.json

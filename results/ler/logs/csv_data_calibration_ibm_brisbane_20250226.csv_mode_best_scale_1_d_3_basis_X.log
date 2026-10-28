@@ -1,0 +1,5 @@
+pm_cal        4616 2.308e-02
+pm_median     4704 2.352e-02
+fast_fp32     4503 2.252e-02
+fast_int8     4525 2.262e-02
+wrote /home/qacc/jsc_revision_2026/calibrated_decoder/results/ler/ibm_brisbane_best0_s1_d3_r3_X.json

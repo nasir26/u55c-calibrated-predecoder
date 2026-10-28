@@ -1,0 +1,74 @@
+{
+ "tier": "T4-SIM",
+ "csv": "ibm_sherbrooke_2025-02-26.csv",
+ "calibration": {
+  "device": "ibm_sherbrooke",
+  "snapshot": "2025-02-26T14:43:10-05:00",
+  "d": 5,
+  "rounds": 5,
+  "basis": "X",
+  "mode": "median",
+  "seed": 0,
+  "scale": 0.5,
+  "qubits": 49,
+  "code_couplers": 80,
+  "placement_qubits": {},
+  "placement_couplers": {},
+  "mean_probability": {
+   "two_qubit": 0.00468778737018373,
+   "idle": 0.0018686199725378484,
+   "readout": 0.00982666015625,
+   "prep": 0.00506591796875
+  },
+  "locations": {
+   "two_qubit": 320,
+   "idle": 319,
+   "readout": 96,
+   "prep": 121
+  }
+ },
+ "rounds": 5,
+ "shots": 200000,
+ "sample_seed": 1005003,
+ "detector_density": 0.06010304166666667,
+ "decoders": {
+  "pm_cal": {
+   "fails": 2407,
+   "ler": 0.012035,
+   "ler_wilson95": [
+    0.011566387683733356,
+    0.012522357619646856
+   ]
+  },
+  "pm_median": {
+   "fails": 2407,
+   "ler": 0.012035,
+   "ler_wilson95": [
+    0.011566387683733356,
+    0.012522357619646856
+   ]
+  },
+  "fast_fp32": {
+   "fails": 2248,
+   "ler": 0.01124,
+   "ler_wilson95": [
+    0.01078726752599663,
+    0.011711508317516965
+   ],
+   "residual_density": 0.0034750833333333335,
+   "seconds": 229.9
+  },
+  "fast_int8": {
+   "fails": 2245,
+   "ler": 0.011225,
+   "ler_wilson95": [
+    0.010772572636711601,
+    0.011696203783030927
+   ],
+   "residual_density": 0.0037255833333333334,
+   "seconds": 2479.8,
+   "calibration_windows": 1024
+  }
+ },
+ "seconds": 2715.4
+}

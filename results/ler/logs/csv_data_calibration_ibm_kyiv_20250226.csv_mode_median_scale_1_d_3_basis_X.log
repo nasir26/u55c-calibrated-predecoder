@@ -1,0 +1,5 @@
+pm_cal       12219 6.109e-02
+pm_median    12219 6.109e-02
+fast_fp32    11911 5.955e-02
+fast_int8    11745 5.872e-02
+wrote /home/qacc/jsc_revision_2026/calibrated_decoder/results/ler/ibm_kyiv_median0_s1_d3_r3_X.json

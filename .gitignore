@@ -1,0 +1,19 @@
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+# fetched or built locally, see scripts/ and build/
+third_party/
+runs/models/nvidia
+runs/models/*.safetensors
+runs/bin/
+build/hw/
+*.xclbin
+paper/**/*.aux
+paper/**/*.log
+paper/**/*.fls
+paper/**/*.fdb_latexmk
+paper/**/*.out
+paper/**/*.bbl
+paper/**/*.blg
+paper/**/*.synctex.gz

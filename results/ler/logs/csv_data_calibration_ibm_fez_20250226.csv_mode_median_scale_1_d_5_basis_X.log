@@ -1,0 +1,5 @@
+pm_cal        9618 4.809e-02
+pm_median     9618 4.809e-02
+fast_fp32     8583 4.292e-02
+fast_int8     8615 4.308e-02
+wrote /home/qacc/jsc_revision_2026/calibrated_decoder/results/ler/ibm_fez_median0_s1_d5_r5_X.json

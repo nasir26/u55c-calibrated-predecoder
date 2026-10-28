@@ -1,0 +1,43 @@
+{
+ "device": "ibm_kingston",
+ "csv": "ibm_kingston_2026-04-15.csv",
+ "scale": 1.0,
+ "basis": "Z",
+ "rounds": 5,
+ "seed": 1,
+ "results": [
+  {
+   "d": 1,
+   "rounds": 5,
+   "shots": 200000,
+   "logical_errors": 10742,
+   "ler": 0.05371
+  },
+  {
+   "d": 2,
+   "rounds": 5,
+   "shots": 200000,
+   "discarded_fraction": 0.508205,
+   "kept": 98359,
+   "logical_errors_kept": 178,
+   "ler_kept": 0.0018096971299016867,
+   "ler_no_decoding": 0.11873
+  },
+  {
+   "d": 3,
+   "rounds": 5,
+   "shots": 200000,
+   "logical_errors": 6659,
+   "ler": 0.033295,
+   "detector_density": 0.069659
+  },
+  {
+   "d": 5,
+   "rounds": 5,
+   "shots": 200000,
+   "logical_errors": 3052,
+   "ler": 0.01526,
+   "detector_density": 0.076040375
+  }
+ ]
+}

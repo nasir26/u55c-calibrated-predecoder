@@ -1,0 +1,5 @@
+pm_cal       10433 5.217e-02
+pm_median    11297 5.649e-02
+fast_fp32     9690 4.845e-02
+fast_int8     9761 4.881e-02
+wrote /home/qacc/jsc_revision_2026/calibrated_decoder/results/ler/ibm_sherbrooke_best0_s1_d5_r5_X.json

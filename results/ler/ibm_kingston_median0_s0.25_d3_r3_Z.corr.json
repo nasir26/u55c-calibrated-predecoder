@@ -1,0 +1,52 @@
+{
+ "tier": "T4-SIM",
+ "csv": "ibm_kingston_2026-04-15.csv",
+ "calibration": {
+  "device": "ibm_kingston",
+  "snapshot": "2026-04-15T09:15:15+02:00",
+  "d": 3,
+  "rounds": 3,
+  "basis": "Z",
+  "mode": "median",
+  "seed": 0,
+  "scale": 0.25,
+  "qubits": 17,
+  "code_couplers": 24,
+  "placement_qubits": {},
+  "placement_couplers": {},
+  "mean_probability": {
+   "two_qubit": 0.0005635948032098499,
+   "idle": 0.0010879388092362146,
+   "readout": 0.00238037109375,
+   "prep": 0.001068115234375
+  },
+  "locations": {
+   "two_qubit": 48,
+   "idle": 67,
+   "readout": 16,
+   "prep": 25
+  }
+ },
+ "rounds": 3,
+ "shots": 200000,
+ "sample_seed": 1003004,
+ "decoders": {
+  "pm_corr": {
+   "fails": 119,
+   "ler": 0.000595,
+   "ler_wilson95": [
+    0.000497290223044972,
+    0.0007118945509338894
+   ]
+  },
+  "fast_fp32_corr": {
+   "fails": 122,
+   "ler": 0.00061,
+   "ler_wilson95": [
+    0.000510957315551199,
+    0.0007282268821987304
+   ]
+  }
+ },
+ "seconds": 106.5
+}

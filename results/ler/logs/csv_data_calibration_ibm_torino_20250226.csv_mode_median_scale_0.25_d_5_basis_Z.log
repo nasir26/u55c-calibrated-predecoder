@@ -1,0 +1,5 @@
+pm_cal         130 6.500e-04
+pm_median      130 6.500e-04
+fast_fp32      126 6.300e-04
+fast_int8      120 6.000e-04
+wrote /home/qacc/jsc_revision_2026/calibrated_decoder/results/ler/ibm_torino_median0_s0.25_d5_r5_Z.json

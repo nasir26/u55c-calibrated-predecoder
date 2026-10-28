@@ -1,0 +1,5 @@
+pm_cal        3308 1.654e-02
+pm_median     3467 1.733e-02
+fast_fp32     3340 1.670e-02
+fast_int8     3282 1.641e-02
+wrote /home/qacc/jsc_revision_2026/calibrated_decoder/results/ler/ibm_kyiv_best0_s1_d3_r3_X.json

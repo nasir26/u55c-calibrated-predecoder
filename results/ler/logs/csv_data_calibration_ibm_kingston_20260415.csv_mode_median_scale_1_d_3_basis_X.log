@@ -1,0 +1,5 @@
+pm_cal        3789 1.895e-02
+pm_median     3789 1.895e-02
+fast_fp32     3761 1.880e-02
+fast_int8     3659 1.829e-02
+wrote /home/qacc/jsc_revision_2026/calibrated_decoder/results/ler/ibm_kingston_median0_s1_d3_r3_X.json

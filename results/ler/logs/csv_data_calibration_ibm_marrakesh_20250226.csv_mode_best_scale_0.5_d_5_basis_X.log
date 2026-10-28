@@ -1,0 +1,5 @@
+pm_cal         502 2.510e-03
+pm_median      548 2.740e-03
+fast_fp32      363 1.815e-03
+fast_int8      368 1.840e-03
+wrote /home/qacc/jsc_revision_2026/calibrated_decoder/results/ler/ibm_marrakesh_best0_s0.5_d5_r5_X.json

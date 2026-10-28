@@ -1,0 +1,5 @@
+pm_cal         330 1.650e-03
+pm_median      321 1.605e-03
+fast_fp32      214 1.070e-03
+fast_int8      219 1.095e-03
+wrote /home/qacc/jsc_revision_2026/calibrated_decoder/results/ler/ibm_aachen_screened1_s0.5_d5_r5_X.json
