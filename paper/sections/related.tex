@@ -1,0 +1,30 @@
+\section{Related work}\label{sec:related}
+
+\textbf{Matching and its refinements.} Minimum weight perfect matching on the detector graph of a circuit
+\cite{dennis2002topological,fowler2012surface} is the standard surface code decoder, and Sparse Blossom made it fast
+enough to decode a million errors per core second \cite{higgott2025sparse}. Union find trades a little accuracy for
+almost linear time \cite{delfosse2021unionfind} and has been placed on FPGAs \cite{liyanage2023fpga} and in a real time
+decoding system \cite{barber2025decoder}. Matching treats X and Z errors independently, so a Y error, or a two qubit
+gate error that flips both, is paid twice. Correlated matching corrects this by reweighting edges after a first pass
+\cite{fowler2013correlated,paler2023pipelined}; belief matching does so with belief propagation
+\cite{higgott2023belief}. PyMatching exposes correlated matching through a decoding option, which is the strongest
+network free baseline used here.
+
+\textbf{Neural decoders and pre-decoders.} Neural decoders for topological codes go back to
+\cite{torlai2017neural}; pre-decoders that handle local errors in front of a global decoder to
+\cite{chamberland2018deep}, and their hardware cost was studied in \cite{overwater2022neural}. AlphaQubit decoded
+experimental data with a transformer trained on simulated and device data \cite{bausch2024alphaqubit}. NVIDIA's Ising
+pre-decoders \cite{chamberland2026predecoder} are three dimensional convolutional networks with pretrained weights
+\cite{nvidia_fast_card} and open evaluation code \cite{nvidia_ising_code}; their accuracy is reported on uniform circuit
+noise against plain matching. Our earlier work \cite{ali2026nodes} implemented them as an integer kernel, in the style
+of integer only inference \cite{jacob2018quantization} and FPGA network compilers
+\cite{duarte2018hls4ml,umuroglu2017finn}, and measured throughput on four U55C cards. Neither study placed the
+networks under device calibrated noise or compared them with correlated matching.
+
+\textbf{Device informed noise and decoder priors.} Google's below threshold experiments decoded with priors fitted to
+device data \cite{google2023scaling,google2025below}, and \cite{sivak2024priors} showed that optimizing the priors of
+the matching graph lowers the logical error on hardware. Pauli twirled amplitude and phase damping is the usual way to
+turn $T_1$ and $T_2$ into circuit noise \cite{ghosh2012decoherence}, and randomized benchmarking
+\cite{magesan2011rb} supplies the gate errors that calibration files report. IBM devices use a heavy hexagonal lattice,
+on which surface codes need flag qubits or a modified layout \cite{chamberland2020heavyhex}; we do not embed the code
+on the lattice (Section~\ref{sec:methods}), but draw its noise from the measured distributions.

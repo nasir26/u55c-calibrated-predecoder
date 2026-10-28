@@ -1,0 +1,115 @@
+\section{Methods}\label{sec:methods}
+
+\subsection{Calibration data}\label{sec:calib}
+
+IBM distributes snapshots of device calibrations with the fake backends of qiskit-ibm-runtime
+\cite{qiskit_ibm_runtime} (version 0.50.0, Apache License 2.0). We export \NumDevices{} of them to CSV files in the
+column layout of IBM's calibration downloads: per qubit $T_1$, $T_2$, readout assignment error, the probability of
+reading 1 after preparing 0, readout length, $\sqrt{X}$ error and gate length, reset length, and per coupler the CZ
+or ECR error and gate length. The reader matches column headers by keywords, so a CSV downloaded from IBM's dashboard
+loads unchanged; a qubit with any missing value is marked unusable and never placed. Table~\ref{tab:devices} lists
+the devices: two Heron r3 snapshots from April 2026, and Heron r2, Heron r1 and Eagle r3 snapshots from February 2025.
+
+\begin{table}[t]
+\caption{The eight calibration snapshots: medians over usable qubits and couplers.}\label{tab:devices}
+\centering
+\setlength{\tabcolsep}{4pt}
+\input{generated/tab_devices.tex}
+\end{table}
+
+\subsection{Calibrated noise on NVIDIA's memory circuit}\label{sec:noise}
+
+The experiment is a rotated surface code memory of distance $d$ over $d$ rounds in the X or Z basis, built by
+NVIDIA's \texttt{MemoryCircuit} with boundary detectors \cite{nvidia_ising_code}: the circuit on which the pre-decoder
+was trained and evaluated. NVIDIA's noise model places noise in every round except the last, which is perfect, and
+reads the data qubits without noise. We generate the circuit with distinct placeholder probabilities, one per class
+of fault location, and replace every placeholder by a channel computed from the calibration of the device qubit or
+coupler assigned to that location (Table~\ref{tab:noise}). Detector and observable definitions are untouched, so the
+network input, the kernel input and the detector order seen by PyMatching are those of NVIDIA's pipeline.
+
+\begin{table}[t]
+\caption{Fault locations of NVIDIA's circuit and their calibrated channels. $r$ is an error per gate from randomized
+benchmarking; idle channels use the duration of the layer in which the qubit waits.}\label{tab:noise}
+\centering
+\begin{tabular}{p{3.2cm}p{8.3cm}}
+\toprule
+Location & Calibrated channel \\
+\midrule
+Two qubit gate & two qubit depolarizing with $5r_{2q}/4$ on the pair; one qubit depolarizing with $3r_{sx}$ on the
+target (the two Hadamards that turn CZ or ECR into CNOT) \\
+Idle during gates & Pauli twirled $T_1$ and $T_2$ decay over the longest coupler of the layer plus two $\sqrt{X}$ gates \\
+Idle during readout & the same, over the longest ancilla readout \\
+Idle during reset & the same, over the longest ancilla reset \\
+Measurement & bit flip with the readout assignment error \\
+Preparation & bit flip with half of the probability of reading 1 after preparing 0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+For an idle of duration $t$ the Pauli twirl of amplitude and phase damping \cite{ghosh2012decoherence} gives
+\begin{equation}
+p_x = p_y = \frac{1 - e^{-t/T_1}}{4}, \qquad p_z = \frac{1 - e^{-t/T_2}}{2} - p_x, \label{eq:idle}
+\end{equation}
+with $T_2$ clipped to $2T_1$. Average gate errors $r$ are converted to depolarizing probabilities with $3r/2$ for one
+qubit and $5r/4$ for two qubits. Measurement and preparation flips are told apart by the next operation on the qubit:
+a flip followed by a measurement of that qubit is a readout error, any other is a preparation error. The preparation
+error takes half of IBM's ``Prob meas1 prep0'' because that quantity contains both the preparation and the readout of
+a prepared 0. An error scale $s$ multiplies every probability and every decay rate ($t \to st$ in
+Eq.~\ref{eq:idle}), so $s = 0.5$ models a device with half of every error.
+
+\textbf{Placement.} IBM devices are heavy hexagonal and the rotated surface code needs a square grid. We do not embed
+the code in the device graph, which would require flag qubits or SWAPs \cite{chamberland2020heavyhex}. Instead, each
+code qubit gets a distinct device qubit and each code coupler a distinct device coupler, in one of three modes:
+\emph{median} (every location gets the device median, a homogeneous circuit), \emph{best} (the lowest error usable
+qubits and couplers) and \emph{screened} (a seeded random draw after removing the worst 10\% of every metric). The
+noise is therefore drawn from each device's measured distribution, not a model of running the code on that chip.
+
+\textbf{Experimental points.} Every device is run in the median and best modes at $s = 1$, $0.5$ and $0.25$ and
+$d = 3$ and $5$; the two Heron r3 devices are also run with three screened draws at $s = 0.5$. Each point is sampled
+with Stim \cite{gidney2021stim}, 200,000 shots per basis, with fixed seeds that make every decoder see the same shots.
+The X and Z experiments are pooled, giving \NumPoints{} points of 400,000 shots.
+
+\subsection{Decoders}\label{sec:decoders}
+
+All matching decoders use PyMatching 2.4 \cite{higgott2022pymatching,higgott2025sparse} on the decomposed detector
+error model of a circuit:
+\begin{description}
+\item[PM] plain matching on the calibrated circuit, so every edge has the weight of its own qubits' rates;
+\item[PM median] plain matching on the median circuit of the same device, which knows only the averages;
+\item[PM-corr] matching with correlations enabled, on the calibrated circuit;
+\item[Pre-decoder + PM] NVIDIA's Fast network (four 3D convolutions of width 128, receptive field 9, trained at
+$d = 9$ on uniform noise \cite{nvidia_fast_card}) in float32 or as the INT8 integer model, followed by PM on the
+residual syndrome, through NVIDIA's evaluation module;
+\item[Pre-decoder + PM-corr] the float network followed by PM-corr.
+\end{description}
+The integer model uses INT8 weights with one scale per output channel, INT8 activations with per layer scales taken
+at the 99.99th percentile of 1,024 windows sampled from the same circuit with a different seed, and the GELU as a
+lookup table; it is the model the FPGA kernel computes
+\cite{ali2026nodes}. A logical failure is a shot whose predicted observable flip differs from the true one. For two
+decoders $a$ and $b$ on the same shots we report the ratio of failures and the two sided exact sign test on the shots
+where exactly one of them fails; a difference is called significant at $p < 0.05$. The logical error per round is
+$\epsilon = \tfrac12\bigl(1 - (1 - 2P)^{1/r}\bigr)$ for a failure probability $P$ over $r$ rounds.
+
+\subsection{One U55C card}\label{sec:card}
+
+The card runs the bitstream of the earlier four card study \cite{ali2026nodes} (SHA256 prefix d399f8d0) on one Alveo
+U55C \cite{amd_ds978}: two instances of an integer kernel whose window size, up to $13 \times 13 \times 13$, and
+weights are launch arguments. A C++ host on XRT \cite{amd_xrt} streams the test windows of a point to both instances
+and reads back one decision bit per site. On the first 4,096 windows of every run, both instances are checked bit
+exact against the integer model. The decisions of all 200,000 windows are then passed, as fixed network outputs,
+through the same evaluation module and PM, and the logical failures are compared shot by shot with the CPU integer
+model. Throughput is measured with both instances busy and two launches in flight, 64 windows per launch, over three
+repetitions of about ten seconds; latency is the mean time of a one window launch with one launch in flight, PCIe
+transfers and runtime included.
+For comparison, the float network is timed in PyTorch on the \CpuName{} host with \CpuThreads{} threads, network
+forward pass only, in batches of 4,096 windows.
+
+\subsection{Teaching example}\label{sec:teaching}
+
+Distances 1 and 2 cannot correct errors and are not part of the evaluation. The repository includes a CPU example
+that runs them, together with $d = 3$ and $5$, from any calibration CSV with the device medians: $d = 1$ is one
+unencoded qubit kept for the duration of the rounds, $d = 2$ discards every shot with a detection event, and $d = 3$
+and $5$ are decoded by PM. With the Kingston medians over five rounds it gives logical errors of \TeachDOneOne\% for
+the bare qubit, \TeachDTwoKeptOne\% for the kept shots of $d = 2$ (with \TeachDTwoDiscardOne\% of shots discarded),
+\TeachDThreeOne\% for $d = 3$ and \TeachDFiveOne\% for $d = 5$ at $s = 1$, and \TeachDFiveQuarter\% for $d = 5$ at
+$s = 0.25$. It uses Stim's generated circuits with a simpler noise model and is not compared with the results below.

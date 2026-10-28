@@ -1,0 +1,45 @@
+\section{Introduction}\label{sec:intro}
+
+A surface code logical qubit is protected only as long as its syndrome is decoded fast and well
+\cite{dennis2002topological,fowler2012surface}. Experiments that operate below the surface code threshold
+\cite{google2023scaling,google2025below} have made decoding speed and accuracy questions of system design, and
+minimum weight perfect matching, in the Sparse Blossom implementation of PyMatching
+\cite{higgott2022pymatching,higgott2025sparse}, is the common reference for both. Neural pre-decoders are one proposal
+to improve on it: a small convolutional network looks at a window of syndrome rounds, removes the errors it is sure
+of, and leaves a sparser syndrome to the matching decoder
+\cite{chamberland2018deep,chamberland2026predecoder}. NVIDIA released two such networks with pretrained weights and
+evaluation code \cite{chamberland2026predecoder,nvidia_fast_card,nvidia_ising_code}. In earlier work we implemented them
+as an integer kernel on Alveo U55C cards and measured their throughput on four cards \cite{ali2026nodes}.
+
+Those networks were trained, and their published accuracy measured, on circuit noise of one strength at every
+location. A device is different. On the IBM devices studied here the two qubit gate error of the worst usable coupler
+is \WorstCouplerMin{} to \WorstCouplerMax{} times that of the median one, the median readout error is
+\ReadoutOverGateMin{} to \ReadoutOverGateMax{} times the median two qubit gate error, and data qubits idle through
+microseconds of ancilla readout with their own $T_1$ and $T_2$. Whether a network trained on uniform noise keeps its
+advantage under such noise, and against which matching baseline that advantage should be judged, is the subject of
+this paper. A decoder that knows each qubit's rates can also weight its matching graph accordingly
+\cite{sivak2024priors}, which raises a second question: how much of any gain comes from the network and how much is
+available to matching alone.
+
+We answer both questions with device calibration data, without access to the devices. IBM publishes calibration
+snapshots of its devices with qiskit-ibm-runtime \cite{qiskit_ibm_runtime}; we export eight of them to CSV files in the
+layout of IBM's own calibration downloads and map every fault location of NVIDIA's memory circuit to the rate of the
+qubit or coupler it is assigned to. The pre-decoder then runs unchanged, in floating point and as the integer model
+that the FPGA kernel computes, and on one U55C card.
+
+The contributions are:
+\begin{itemize}
+\item A noise model that keeps the fault locations of NVIDIA's circuit, so the network sees the structure it was
+trained on, and sets every location from a calibration CSV: gate errors, readout and preparation errors, and $T_1$ and
+$T_2$ decay over the measured durations of gate, readout and reset layers (Section~\ref{sec:methods}).
+\item An evaluation over \NumPoints{} points (eight devices, three placements, three error scales, distances 3 and 5)
+with paired, shot by shot comparisons against plain matching, matching with device median weights and correlated
+matching \cite{fowler2013correlated,paler2023pipelined} (Section~\ref{sec:results}).
+\item The finding that correlated matching, with no network, beats the pre-decoder pipeline at every distance 5
+point, that the network loses its advantage on strongly uneven qubits, and that calibrated matching weights are worth
+up to \MedWeightsMax{} times in logical error on their own.
+\item Integer inference of the network on one U55C card, bit exact on every run and identical to the CPU integer
+model in every logical failure wherever both were run, with a direct throughput comparison against a \CpuThreads{} thread CPU.
+\item A public repository with the calibration files, the experiments and a teaching example that runs codes of
+distance 1, 2, 3 and 5 from any calibration CSV on a laptop.
+\end{itemize}

@@ -17,3 +17,6 @@ paper/**/*.out
 paper/**/*.bbl
 paper/**/*.blg
 paper/**/*.synctex.gz
+paper/submission/
+paper/*.zip
+paper/*.zip.sha256

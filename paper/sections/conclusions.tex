@@ -1,0 +1,12 @@
+\section{Conclusions}\label{sec:conclusions}
+
+We evaluated a published neural pre-decoder on surface code circuits whose noise comes from the calibration files
+of eight IBM devices, over \NumPoints{} points and \TotalShots{} shots, and ran its integer form on one Alveo U55C.
+Against plain matching the pre-decoder helps at most points, as reported for uniform noise. Against correlated
+matching, which needs no network, it loses at every distance 5 point, and putting it in front of correlated matching
+does not help; it keeps an edge only for small codes at low error. On strongly uneven qubits the network trained on
+uniform noise makes plain matching worse, while matching weights from the calibration file improve it. The card
+computes the integer network exactly, with logical outcomes identical to the CPU model wherever both were run, but
+more slowly than a large
+CPU. A pre-decoder for real devices will need to be trained on device like noise and judged against correlated
+matching; the released calibration files, noise model and experiments are a basis for both.

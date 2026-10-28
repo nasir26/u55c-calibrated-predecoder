@@ -1,0 +1,33 @@
+\section{Discussion}\label{sec:discussion}
+
+\textbf{Which baseline.} A pre-decoder is usually judged against the matching decoder it feeds. Our results show why
+that is not enough under realistic noise: most of what the network gains over plain matching at $d = 5$ is recovered,
+and more, by correlated matching, a decoding option of the same library. The network's advantage at $d = 3$ and low
+error is real but small, and it sits where correlated matching is at its weakest. Any claim of a pre-decoder gain
+under device noise should therefore name the strongest network free baseline at the same point. Belief matching
+\cite{higgott2023belief} and other correlated decoders were not run and might move the bar further.
+
+\textbf{What calibration buys.} The calibration file helps twice. As a noise source it exposes the network to
+structure it was not trained on, and on strongly uneven placements the network's uniform prior costs logical
+fidelity. As a set of matching weights it improves plain matching by up to \MedWeightsMax{} times with no network at
+all, a gain of the same size as the network's own at $d = 3$. The obvious next step, training or fine tuning the
+network on calibrated noise, is outside this study; the released noise model produces exactly the training circuits
+it would need.
+
+\textbf{What the card shows.} The card reproduces the integer model exactly, shot for shot in logical outcome, so the
+FPGA adds no error beyond quantization. Quantization itself is not free under calibrated noise: the integer pipeline
+fails \QuantMin{} to \QuantMax{} times as often as the float one, significantly better at \QuantBetter{} and worse at
+\QuantWorse{} of \QuantN{} points. The integer scales are fitted to each circuit's own windows; a deployed integer pre-decoder would need the same per
+device calibration. As
+an accelerator, one card is slower than the \CpuThreads{} thread host for this small network, and at hundreds of
+microseconds per round it is far from a microsecond syndrome cycle. The value of the card in this study is as a verified integer
+implementation, not as a speedup.
+
+\section{Limitations}\label{sec:limitations}
+
+No circuit was run on IBM hardware. The calibrations set the rates of a simulated circuit; leakage, crosstalk,
+measurement induced dephasing beyond $T_2$, drift and correlated errors are not modelled, and gate errors from
+randomized benchmarking are treated as depolarizing. The code is not embedded in the heavy hexagonal lattice, so
+the results describe noise drawn from each device's distribution, not that device running the code. The snapshots
+are single points in time. NVIDIA's network was used as published, trained at $d = 9$ on uniform noise. Throughput
+and latency are measured through PCIe with runtime overheads, not in a decoding loop.

@@ -1,0 +1,14 @@
+Neural pre-decoders remove local errors from a surface code syndrome before a matching decoder handles the rest, and
+are usually trained and judged on uniform circuit noise. We evaluate NVIDIA's Fast pre-decoder on
+memory circuits whose every fault location carries the error rate of a real qubit or coupler, read from IBM
+calibration CSV files. Eight IBM devices, three placements of code qubits and three error scales give
+\NumPoints{} points at distances 3 and 5, with \TotalShots{} shots. Against plain matching the pre-decoder wins at \PmFiveBetter{} of \PmFiveN{} distance 5 points, with failure ratios down to \PmFiveMin{}. Against
+PyMatching with correlated matching, which needs no network, the outcome reverses: the pre-decoder loses at every
+distance 5 point (ratios \CorrFiveMin{} to \CorrFiveMax{}), and placing it in front of correlated matching does not
+help. It keeps an advantage at distance 3 and low noise, where correlated matching is worse than plain matching. On
+strongly uneven qubits the network makes even plain matching worse, by up to \KingScreenMax{} times, while matching
+weights from each qubit's calibration beat device medians by up to \MedWeightsMax{} times. The integer network runs
+on one Alveo U55C card, bit exact in \CardAllExact{} \CardConfigs{} runs and, in the \CardCompared{} runs with a CPU counterpart,
+identical to the CPU integer model in logical failures shot by shot. One card decodes \CardRateDf{} distance 5 windows per second, which a
+\CpuThreads{} thread CPU exceeds by \CpuOverCardDf{} times. Calibration files, code and a teaching example for
+distances 1 to 5 are released.

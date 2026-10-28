@@ -94,6 +94,9 @@ def pooled(entry: dict) -> dict | None:
             n01 = int((~bits[a] & bits[b]).sum())
             out[f"{a}_vs_{b}"] = dict(ratio=bits[a].sum() / max(bits[b].sum(), 1), n10=n10, n01=n01,
                                       p_sign=sign_test(n10, n01))
+    if {"pm_cal", "fast_int8", "pm_corr"} <= set(bits):
+        fixed = bits["pm_cal"] & ~bits["fast_int8"]          # shots the network pipeline corrects and PM does not
+        out["network_fixes"] = dict(n=int(fixed.sum()), also_pm_corr=int((fixed & ~bits["pm_corr"]).sum()))
     out["detector_density"] = 0.5 * (entry["X"]["rec"]["detector_density"] + entry["Z"]["rec"]["detector_density"])
     return out
 
@@ -131,7 +134,9 @@ def main():
                 a = np.unpackbits(np.load(CARD / c["failure_bits"])["card_int8"])[:c["shots"]]
                 b = np.unpackbits(np.load(cpu)["fast_int8"])[:c["shots"]]
                 c["same_failures_as_cpu_int8"] = bool(np.array_equal(a, b))
-    out = dict(tier="T4-SIM (CPU) and T1-HW (card)", devices=devs, points=rows, card=card)
+    cpu = json.loads((ROOT / "results" / "cpu" / "cpu_throughput.json").read_text()) \
+        if (ROOT / "results" / "cpu" / "cpu_throughput.json").exists() else None
+    out = dict(tier="T4-SIM (CPU) and T1-HW (card)", devices=devs, points=rows, card=card, cpu_throughput=cpu)
     (ROOT / "results" / "summary.json").write_text(json.dumps(out, indent=1, default=float))
 
     # device table
@@ -162,7 +167,8 @@ def main():
                                         "pm_corr_vs_pm_cal", "fast_int8_vs_pm_corr", "fast_fp32_corr_vs_pm_corr")), []))
 
     figures(rows, devs, card)
-    macros(rows, devs, card)
+    macros(rows, devs, card, cpu)
+    latex_tables(rows, devs, card, cpu)
     print(f"{len(rows)} pooled points; tables in {TAB}")
 
 
@@ -191,37 +197,37 @@ def figures(rows, devs, card):
     fig.tight_layout()
     fig.savefig(FIG / "fig_ratio.pdf")
     # 2: error per round against d and scale for PyMatching alone and the pre-decoder pipeline
-    fig, axs = plt.subplots(1, 3, figsize=(7.0, 2.4), sharey=True)
+    fig, axs = plt.subplots(1, 3, figsize=(7.0, 2.5), sharey=True)
     for ax, s in zip(axs, (1.0, 0.5, 0.25)):
         for i, dev in enumerate(ORDER):
             rr = sorted([r for r in med if r["device"] == dev and r["scale"] == s], key=lambda r: r["d"])
             if rr:
                 ax.plot([r["d"] for r in rr], [r["decoders"]["pm_cal"]["eps_round"] for r in rr], color=f"C{i}",
                         marker="o", ms=3, lw=1, label=dev[4:])
-                if all("fast_int8" in r["decoders"] for r in rr):
-                    ax.plot([r["d"] for r in rr], [r["decoders"]["fast_int8"]["eps_round"] for r in rr], color=f"C{i}",
+                if all("pm_corr" in r["decoders"] for r in rr):
+                    ax.plot([r["d"] for r in rr], [r["decoders"]["pm_corr"]["eps_round"] for r in rr], color=f"C{i}",
                             marker="x", ms=3, lw=0.8, ls=":")
         ax.set_yscale("log")
         ax.set_xticks([3, 5])
         ax.set_xlabel("code distance d")
         ax.set_title(f"s = {s:g}")
-    axs[0].set_ylabel("logical error per round\n(solid PyMatching, dotted Fast INT8 + PyMatching)")
-    axs[2].legend(frameon=False, fontsize=6)
-    fig.tight_layout()
+    axs[0].set_ylabel("logical error per round")
+    fig.legend(*axs[0].get_legend_handles_labels(), frameon=False, fontsize=6.5, loc="center right")
+    fig.tight_layout(rect=(0, 0, 0.86, 1))
     fig.savefig(FIG / "fig_eps_round.pdf")
     # 3: value of per qubit matching weights (heterogeneous placements)
     het = [r for r in rows if r["placement"] != "median" and "pm_median_vs_pm_cal" in r]
     if het:
-        fig, ax = plt.subplots(figsize=(3.4, 2.4))
+        fig, ax = plt.subplots(figsize=(5.0, 2.5))
         for i, dev in enumerate(ORDER):
             rr = [r for r in het if r["device"] == dev]
             ax.scatter([r["decoders"]["pm_cal"]["ler"] for r in rr], [r["pm_median_vs_pm_cal"]["ratio"] for r in rr],
                        s=8, color=f"C{i}", label=dev[4:])
         ax.axhline(1, color="k", lw=0.7, ls="--")
         ax.set_xscale("log")
-        ax.set_xlabel("logical error per shot, PyMatching with calibrated weights")
-        ax.set_ylabel("failures: median weights / calibrated")
-        ax.legend(frameon=False, fontsize=5.5, ncol=2)
+        ax.set_xlabel("logical error per shot, PyMatching, calibrated weights")
+        ax.set_ylabel("failures, median weights\n/ calibrated weights")
+        ax.legend(frameon=False, fontsize=6.5, loc="center left", bbox_to_anchor=(1.01, 0.5))
         fig.tight_layout()
         fig.savefig(FIG / "fig_weights.pdf")
     # 5: the pre-decoder pipeline against both baselines, every point, by the error rate of plain matching
@@ -258,7 +264,57 @@ def figures(rows, devs, card):
         fig.savefig(FIG / "fig_card.pdf")
 
 
-def macros(rows, devs, card):
+def latex_tables(rows, devs, card, cpu):
+    """paper/generated/tab_*.tex: devices, wins and losses per baseline, card runs and throughput."""
+    def w(name, lines):
+        (GEN / name).write_text("% generated by analysis/summarize.py; do not edit\n" + "\n".join(lines) + "\n")
+    t = ["\\begin{tabular}{llrrrrrrr}", "\\toprule",
+         "Device & Family & Usable & 2q & 2q error & sx error & Readout & $T_1$ & $T_2$ \\\\",
+         " & (snapshot) & qubits & gate & (\\%) & (\\%) & error (\\%) & ($\\mu$s) & ($\\mu$s) \\\\", "\\midrule"]
+    for d in ORDER:
+        v = devs[d]
+        t.append(f"{d.replace('ibm_', '').capitalize()} & {FAMILY[d]} ({v['snapshot'][:7]}) & {v['usable_qubits']} & "
+                 f"{v['two_qubit_gate'].upper()} & {100 * v['median_2q_error']:.2f} & {100 * v['median_sx_error']:.3f} & "
+                 f"{100 * v['median_readout_error']:.2f} & {v['median_t1_us']:.0f} & {v['median_t2_us']:.0f} \\\\")
+    w("tab_devices.tex", t + ["\\bottomrule", "\\end{tabular}"])
+    t = ["\\begin{tabular}{llrrrr}", "\\toprule",
+         "Comparison & $d$ & Points & Better & Worse & Failure ratio \\\\", "\\midrule"]
+    for lab, cmp in (("INT8 pre-decoder + PM vs PM", "fast_int8_vs_pm_cal"),
+                     ("INT8 pre-decoder + PM vs PM-corr", "fast_int8_vs_pm_corr"),
+                     ("float pre-decoder + PM vs PM-corr", "fast_fp32_vs_pm_corr"),
+                     ("float pre-decoder + PM-corr vs PM-corr", "fast_fp32_corr_vs_pm_corr"),
+                     ("PM-corr vs PM", "pm_corr_vs_pm_cal"),
+                     ("PM, median weights vs calibrated", "pm_median_vs_pm_cal")):
+        for dd in (3, 5):
+            rr = [r[cmp] for r in rows if r["d"] == dd and cmp in r
+                  and (cmp != "pm_median_vs_pm_cal" or r["placement"] != "median")]
+            if rr:
+                t.append(f"{lab} & {dd} & {len(rr)} & {sum(1 for c in rr if c['ratio'] < 1 and c['p_sign'] < 0.05)} & "
+                         f"{sum(1 for c in rr if c['ratio'] > 1 and c['p_sign'] < 0.05)} & "
+                         f"{min(c['ratio'] for c in rr):.2f} to {max(c['ratio'] for c in rr):.2f} \\\\")
+    w("tab_wins.tex", t + ["\\bottomrule", "\\end{tabular}"])
+    cfgs = [c for cc in card for c in cc.get("configs", [])]
+    t = ["\\begin{tabular}{lrrlrrrl}", "\\toprule",
+         "Device & Scale & $d$ & Basis & Shots & PM & Card + PM & Same as CPU \\\\", "\\midrule"]
+    for c in cfgs:
+        same = {True: "yes", False: "no"}.get(c.get("same_failures_as_cpu_int8"), "n/a")
+        t.append(f"{c['device_name'].replace('ibm_', '').capitalize()} & {c['scale']:g} & {c['d']} & {c['basis']} & "
+                 f"{c['shots']:,} & {c['pm_cal']['fails']:,} & {c['card_int8']['fails']:,} & {same} \\\\")
+    w("tab_card.tex", t + ["\\bottomrule", "\\end{tabular}"])
+    perf = {p["d"]: p for cc in card for p in cc.get("perf", [])}
+    cpu_d = {r["d"]: r for r in (cpu or {}).get("rows", [])}
+    t = ["\\begin{tabular}{rrrrr}", "\\toprule",
+         "$d$ & Card (windows/s) & One window (ms) & CPU (windows/s) & CPU / card \\\\", "\\midrule"]
+    for dd in sorted(perf):
+        cr = float(np.median(perf[dd]["windows_per_sec_reps"]))
+        cp = cpu_d.get(dd)
+        t.append(f"{dd} & {cr:,.0f} & {perf[dd]['latency_one_window_s'] * 1e3:.2f} & "
+                 + (f"{cp['windows_per_sec']:,.0f} & {cp['windows_per_sec'] / cr:.1f}" if cp else "n/a & n/a")
+                 + " \\\\")
+    w("tab_perf.tex", t + ["\\bottomrule", "\\end{tabular}"])
+
+
+def macros(rows, devs, card, cpu=None):
     """LaTeX macros for every number the paper quotes (paper/generated/macros.tex)."""
     m = {}
     m["NumDevices"] = str(len(devs))
@@ -291,7 +347,60 @@ def macros(rows, devs, card):
           and r["placement"].startswith("screened") and "fast_int8_vs_pm_cal" in r]
     if ks:
         m["KingScreenMin"], m["KingScreenMax"] = f"{min(ks):.2f}", f"{max(ks):.2f}"
+        m["KingScreenN"] = str(len(ks))
+        m["KingScreenWorse"] = str(sum(1 for r in rows if r["device"] == "ibm_kingston"
+                                       and r["placement"].startswith("screened")
+                                       and r["fast_int8_vs_pm_cal"]["ratio"] > 1
+                                       and r["fast_int8_vs_pm_cal"]["p_sign"] < 0.05))
+    for d, dt in ((3, "Three"), (5, "Five")):
+        rr = [r["pm_median_vs_pm_cal"] for r in rows if r["d"] == d and r["placement"] != "median"
+              and "pm_median_vs_pm_cal" in r]
+        m[f"MedW{dt}N"] = str(len(rr))
+        m[f"MedW{dt}Worse"] = str(sum(1 for c in rr if c["ratio"] > 1 and c["p_sign"] < 0.05))
     m["TotalShots"] = f"{sum(r['shots'] for r in rows):,}"
+    # distance 3 at the lowest error scale: correlated matching against plain, the pre-decoder against correlated
+    low = [r for r in rows if r["d"] == 3 and r["scale"] == 0.25 and "pm_corr_vs_pm_cal" in r]
+    if low:
+        m["LowN"] = str(len(low))
+        m["LowCorrWorse"] = str(sum(1 for r in low if r["pm_corr_vs_pm_cal"]["ratio"] > 1))
+        m["LowFastBetterCorr"] = str(sum(1 for r in low if r["fast_int8_vs_pm_corr"]["ratio"] < 1
+                                         and r["fast_int8_vs_pm_corr"]["p_sign"] < 0.05))
+    # devices whose median circuit is below threshold (error per round falls from d = 3 to d = 5), per decoder and scale
+    for sc, st_ in ((1.0, "One"), (0.5, "Half"), (0.25, "Quarter")):
+        for dec, dt in (("pm_cal", "Pm"), ("pm_corr", "Corr"), ("fast_int8", "Fast")):
+            pr = {}
+            for r in rows:
+                if r["placement"] == "median" and r["scale"] == sc and dec in r["decoders"]:
+                    pr.setdefault(r["device"], {})[r["d"]] = r["decoders"][dec]["eps_round"]
+            m[f"Below{dt}{st_}"] = str(sum(1 for v in pr.values() if 3 in v and 5 in v and v[5] < v[3]))
+    ex = [r for r in rows if r["device"] == "ibm_aachen" and r["placement"] == "median" and r["scale"] == 1.0
+          and r["d"] == 5]
+    if ex:
+        for k, t in (("pm_cal", "Pm"), ("pm_corr", "Corr"), ("fast_int8", "Fast"), ("fast_fp32_corr", "FastCorr")):
+            m[f"ExAachen{t}"] = f"{ex[0]['decoders'][k]['fails']:,}"
+    q = [r["fast_int8_vs_fast_fp32"] for r in rows if "fast_int8_vs_fast_fp32" in r]
+    if q:
+        m["QuantMin"], m["QuantMax"] = f"{min(c['ratio'] for c in q):.2f}", f"{max(c['ratio'] for c in q):.2f}"
+        m["QuantBetter"] = str(sum(1 for c in q if c["ratio"] < 1 and c["p_sign"] < 0.05))
+        m["QuantWorse"] = str(sum(1 for c in q if c["ratio"] > 1 and c["p_sign"] < 0.05))
+        m["QuantN"] = str(len(q))
+    for d, dt in ((3, "Three"), (5, "Five")):
+        nf = [r["network_fixes"] for r in rows if r["d"] == d and "network_fixes" in r]
+        if nf:
+            m[f"Overlap{dt}"] = f"{100 * sum(x['also_pm_corr'] for x in nf) / sum(x['n'] for x in nf):.0f}"
+    best5 = [r["fast_int8_vs_pm_cal"]["ratio"] for r in rows if r["d"] == 5 and r["placement"] == "best"]
+    med5 = [r["fast_int8_vs_pm_cal"]["ratio"] for r in rows if r["d"] == 5 and r["placement"] == "median"]
+    m["MedianFiveMeanRatio"], m["BestFiveMeanRatio"] = f"{np.mean(med5):.2f}", f"{np.mean(best5):.2f}"
+    # spread of the calibrations: worst usable coupler over the median one, median readout over median 2q error
+    import statistics as st
+    worst, ro = [], []
+    for f in sorted(glob.glob(str(ROOT / "data" / "calibration" / "*.csv"))):
+        c = read_csv(f)
+        e = [c.coupler_error[k] for k in c.usable_couplers()]
+        worst.append(max(e) / st.median(e))
+        ro.append(st.median(c.readout_error[q] for q in c.usable_qubits()) / st.median(e))
+    m["WorstCouplerMin"], m["WorstCouplerMax"] = f"{min(worst):.0f}", f"{max(worst):.0f}"
+    m["ReadoutOverGateMin"], m["ReadoutOverGateMax"] = f"{min(ro):.1f}", f"{max(ro):.1f}"
     cfgs = [c for cc in card for c in cc.get("configs", [])]
     if cfgs:
         m["CardConfigs"] = str(len(cfgs))
@@ -303,6 +412,25 @@ def macros(rows, devs, card):
         tag = "abcdefghijklmn"[p["d"]]
         m[f"CardRateD{tag}"] = f"{np.median(p['windows_per_sec_reps']):,.0f}"
         m[f"CardLatD{tag}"] = f"{p['latency_one_window_s'] * 1e3:.2f}"
+    if cpu:
+        m["CpuName"] = cpu["cpu"].replace("(R)", "").replace("(TM)", "").replace(" Processor", "")
+        m["CpuThreads"] = str(cpu["threads"])
+        perf_d = {p["d"]: float(np.median(p["windows_per_sec_reps"])) for p in perf}
+        for r in cpu["rows"]:
+            tag = "abcdefghijklmn"[r["d"]]
+            m[f"CpuRateD{tag}"] = f"{r['windows_per_sec']:,.0f}"
+            if r["d"] in perf_d:
+                m[f"CpuOverCardD{tag}"] = f"{r['windows_per_sec'] / perf_d[r['d']]:.1f}"
+    teach = ROOT / "results" / "teaching"
+    for sc, tag in (("1", "One"), ("0.5", "Half"), ("0.25", "Quarter")):
+        f = teach / f"kingston_s{sc}.json"
+        if f.exists():
+            res = {x["d"]: x for x in json.loads(f.read_text())["results"]}
+            m[f"TeachDOne{tag}"] = f"{100 * res[1]['ler']:.2f}"
+            m[f"TeachDTwoKept{tag}"] = f"{100 * res[2]['ler_kept']:.3f}"
+            m[f"TeachDTwoDiscard{tag}"] = f"{100 * res[2]['discarded_fraction']:.0f}"
+            m[f"TeachDThree{tag}"] = f"{100 * res[3]['ler']:.2f}"
+            m[f"TeachDFive{tag}"] = f"{100 * res[5]['ler']:.3f}"
     with open(GEN / "macros.tex", "w") as fh:
         fh.write("% generated by analysis/summarize.py; do not edit\n")
         for k, v in m.items():

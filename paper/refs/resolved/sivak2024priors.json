@@ -1,0 +1,27 @@
+{
+ "source": "crossref",
+ "doi": "10.1103/physrevlett.133.150603",
+ "title": "Optimization of Decoder Priors for Accurate Quantum Error Correction",
+ "venue": "Physical Review Letters",
+ "volume": "133",
+ "issue": "15",
+ "pages": "150603",
+ "year": 2024,
+ "authors": [
+  [
+   "Sivak",
+   "Volodymyr"
+  ],
+  [
+   "Newman",
+   "Michael"
+  ],
+  [
+   "Klimov",
+   "Paul"
+  ]
+ ],
+ "type": "journal-article",
+ "publisher": "American Physical Society (APS)",
+ "url": "https://doi.org/10.1103/physrevlett.133.150603"
+}

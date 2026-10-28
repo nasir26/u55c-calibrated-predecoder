@@ -1,0 +1,85 @@
+%% Calibration aware neural pre-decoding on one FPGA card
+%% Author: Nasir Ali, C-DAC Noida
+
+\documentclass[pdflatex,sn-mathphys-num]{sn-jnl}
+\pdfgentounicode=1
+\input{glyphtounicode}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{amsthm}
+\usepackage[title]{appendix}
+\usepackage{xcolor}
+\usepackage{textcomp}
+\usepackage{manyfoot}
+\usepackage{booktabs}
+\usepackage[utf8]{inputenc}
+\usepackage{array}
+\usepackage{url}
+\usepackage{etoolbox}
+\AtBeginEnvironment{table}{\small}
+
+\newcommand{\PENDING}[1]{\textcolor{red}{[PENDING: #1]}}
+\input{generated/macros.tex}
+
+\raggedbottom
+
+\begin{document}
+
+\title[Calibration Aware Neural Pre-Decoding on One FPGA]{Neural Pre-Decoding Under Device Calibrated Noise:
+IBM Calibration Data, Correlated Matching and Integer Inference on One Alveo U55C}
+
+\author*[1]{\fnm{Nasir} \sur{Ali}}\email{nasirali2607@gmail.com}
+
+\affil*[1]{\orgdiv{Embedded Systems Division},
+           \orgname{Centre for Development of Advanced Computing},
+           \orgaddress{\city{Noida}, \postcode{201307}, \country{India}}}
+
+\abstract{\input{sections/abstract.tex}}
+
+\keywords{Quantum error correction, Surface code, Neural pre-decoder, Device calibration, Correlated matching,
+FPGA, Integer inference, Alveo U55C}
+
+\maketitle
+
+\input{sections/introduction.tex}
+\input{sections/related.tex}
+\input{sections/methods.tex}
+\input{sections/results.tex}
+\input{sections/discussion.tex}
+\input{sections/conclusions.tex}
+
+\backmatter
+
+\bmhead{Acknowledgments}
+This work was funded by the Ministry of Electronics and Information Technology (MeitY), Government of India. The
+research was conducted at the C-DAC Noida Centre under the supervision of Mr. Abhishek Tiwari, Scientist F, Embedded
+Systems Division, C-DAC Noida. We thank NVIDIA for releasing the Ising pre-decoders with their evaluation code and
+pretrained weights, IBM for publishing device calibration snapshots with qiskit-ibm-runtime, and the developers of
+Stim and PyMatching, on which the evaluation of this work depends.
+
+\section*{Declarations}
+
+\textbf{Funding.} This work was funded by the Ministry of Electronics and Information Technology (MeitY), Government of
+India.
+
+\textbf{Conflict of interest.} The author declares no competing interests.
+
+\textbf{Ethics approval and consent to participate.} Not applicable.
+
+\textbf{Consent for publication.} Not applicable.
+
+\textbf{Data availability.} The calibration files, the per shot failure records of every decoder at every
+experimental point, the card measurement records and the scripts that generate every table and figure from them are
+available from the corresponding author on reasonable request. The calibration snapshots are distributed with
+qiskit-ibm-runtime under the Apache License 2.0 \cite{qiskit_ibm_runtime}; the pretrained network is available from
+NVIDIA under the NVIDIA Open Model License \cite{nvidia_fast_card}.
+
+\textbf{Author contribution.} N.~Ali designed the calibration driven noise model and the experiments, implemented the
+evaluation harness and the card runtime, carried out the measurements and wrote the manuscript.
+
+\bibliography{references}
+
+\end{document}
