@@ -2,4 +2,4 @@ pm_cal         341 1.705e-03
 pm_median      374 1.870e-03
 fast_fp32      310 1.550e-03
 fast_int8      316 1.580e-03
-wrote /home/qacc/jsc_revision_2026/calibrated_decoder/results/ler/ibm_brisbane_best0_s0.25_d5_r5_X.json
+wrote results/ler/ibm_brisbane_best0_s0.25_d5_r5_X.json

@@ -2,4 +2,4 @@ pm_cal         167 8.350e-04
 pm_median      185 9.250e-04
 fast_fp32      153 7.650e-04
 fast_int8      172 8.600e-04
-wrote /home/qacc/jsc_revision_2026/calibrated_decoder/results/ler/ibm_sherbrooke_best0_s0.25_d5_r5_Z.json
+wrote results/ler/ibm_sherbrooke_best0_s0.25_d5_r5_Z.json

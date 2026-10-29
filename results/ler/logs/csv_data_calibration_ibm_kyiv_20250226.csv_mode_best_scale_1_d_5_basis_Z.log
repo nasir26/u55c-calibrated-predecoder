@@ -2,4 +2,4 @@ pm_cal       10478 5.239e-02
 pm_median    10904 5.452e-02
 fast_fp32     9816 4.908e-02
 fast_int8     9897 4.949e-02
-wrote /home/qacc/jsc_revision_2026/calibrated_decoder/results/ler/ibm_kyiv_best0_s1_d5_r5_Z.json
+wrote results/ler/ibm_kyiv_best0_s1_d5_r5_Z.json

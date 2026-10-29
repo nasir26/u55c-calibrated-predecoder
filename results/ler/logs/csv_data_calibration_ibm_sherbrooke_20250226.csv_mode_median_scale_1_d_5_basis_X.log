@@ -2,4 +2,4 @@ pm_cal       14327 7.164e-02
 pm_median    14327 7.164e-02
 fast_fp32    14265 7.132e-02
 fast_int8    14360 7.180e-02
-wrote /home/qacc/jsc_revision_2026/calibrated_decoder/results/ler/ibm_sherbrooke_median0_s1_d5_r5_X.json
+wrote results/ler/ibm_sherbrooke_median0_s1_d5_r5_X.json

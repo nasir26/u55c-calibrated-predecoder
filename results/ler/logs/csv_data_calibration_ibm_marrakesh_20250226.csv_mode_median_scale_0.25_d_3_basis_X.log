@@ -2,4 +2,4 @@ pm_cal         449 2.245e-03
 pm_median      449 2.245e-03
 fast_fp32      464 2.320e-03
 fast_int8      450 2.250e-03
-wrote /home/qacc/jsc_revision_2026/calibrated_decoder/results/ler/ibm_marrakesh_median0_s0.25_d3_r3_X.json
+wrote results/ler/ibm_marrakesh_median0_s0.25_d3_r3_X.json

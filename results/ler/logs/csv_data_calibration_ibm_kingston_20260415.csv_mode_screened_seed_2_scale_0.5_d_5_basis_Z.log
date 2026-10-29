@@ -2,4 +2,4 @@ pm_cal         303 1.515e-03
 pm_median      305 1.525e-03
 fast_fp32      247 1.235e-03
 fast_int8      254 1.270e-03
-wrote /home/qacc/jsc_revision_2026/calibrated_decoder/results/ler/ibm_kingston_screened2_s0.5_d5_r5_Z.json
+wrote results/ler/ibm_kingston_screened2_s0.5_d5_r5_Z.json

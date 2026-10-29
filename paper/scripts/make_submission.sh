@@ -9,7 +9,7 @@
 set -euo pipefail
 P=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 REPO=$(cd "$P/.." && pwd)
-PY=${PY:-$REPO/../envs/neural/bin/python}
+PY=${PY:-python3}
 [ -d "$REPO/../envs/texlive/bin/x86_64-linux" ] && export PATH=$REPO/../envs/texlive/bin/x86_64-linux:$PATH
 cd $P
 $PY scripts/make_bib.py

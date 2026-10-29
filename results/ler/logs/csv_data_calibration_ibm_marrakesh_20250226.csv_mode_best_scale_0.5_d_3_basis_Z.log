@@ -2,4 +2,4 @@ pm_cal         404 2.020e-03
 pm_median      412 2.060e-03
 fast_fp32      386 1.930e-03
 fast_int8      389 1.945e-03
-wrote /home/qacc/jsc_revision_2026/calibrated_decoder/results/ler/ibm_marrakesh_best0_s0.5_d3_r3_Z.json
+wrote results/ler/ibm_marrakesh_best0_s0.5_d3_r3_Z.json

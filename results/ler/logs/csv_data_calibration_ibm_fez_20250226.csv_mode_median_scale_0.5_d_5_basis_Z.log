@@ -2,4 +2,4 @@ pm_cal         787 3.935e-03
 pm_median      787 3.935e-03
 fast_fp32      590 2.950e-03
 fast_int8      610 3.050e-03
-wrote /home/qacc/jsc_revision_2026/calibrated_decoder/results/ler/ibm_fez_median0_s0.5_d5_r5_Z.json
+wrote results/ler/ibm_fez_median0_s0.5_d5_r5_Z.json

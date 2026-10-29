@@ -2,4 +2,4 @@ pm_cal          37 1.850e-04
 pm_median       37 1.850e-04
 fast_fp32       24 1.200e-04
 fast_int8       24 1.200e-04
-wrote /home/qacc/jsc_revision_2026/calibrated_decoder/results/ler/ibm_kingston_median0_s0.25_d5_r5_Z.json
+wrote results/ler/ibm_kingston_median0_s0.25_d5_r5_Z.json

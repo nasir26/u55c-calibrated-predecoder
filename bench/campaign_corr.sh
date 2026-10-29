@@ -3,7 +3,7 @@
 # Author: Nasir Ali, C-DAC Noida.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-PY=${PY:-../envs/neural/bin/python}
+PY=${PY:-python3}
 mkdir -p results/ler/logs_corr
 jobs() {
   for csv in data/calibration/*.csv; do
