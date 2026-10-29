@@ -195,7 +195,7 @@ def figures(rows, devs, card):
     axs[0].set_ylabel("failures: Fast INT8 + PyMatching\n/ PyMatching alone")
     axs[1].legend(frameon=False, ncol=2)
     fig.tight_layout()
-    fig.savefig(FIG / "fig_ratio.pdf")
+    fig.savefig(FIG / "fig_ratio.pdf", metadata={"CreationDate": None})
     # 2: error per round against d and scale for PyMatching alone and the pre-decoder pipeline
     fig, axs = plt.subplots(1, 3, figsize=(7.0, 2.5), sharey=True)
     for ax, s in zip(axs, (1.0, 0.5, 0.25)):
@@ -214,7 +214,7 @@ def figures(rows, devs, card):
     axs[0].set_ylabel("logical error per round")
     fig.legend(*axs[0].get_legend_handles_labels(), frameon=False, fontsize=6.5, loc="center right")
     fig.tight_layout(rect=(0, 0, 0.86, 1))
-    fig.savefig(FIG / "fig_eps_round.pdf")
+    fig.savefig(FIG / "fig_eps_round.pdf", metadata={"CreationDate": None})
     # 3: value of per qubit matching weights (heterogeneous placements)
     het = [r for r in rows if r["placement"] != "median" and "pm_median_vs_pm_cal" in r]
     if het:
@@ -229,7 +229,7 @@ def figures(rows, devs, card):
         ax.set_ylabel("failures, median weights\n/ calibrated weights")
         ax.legend(frameon=False, fontsize=6.5, loc="center left", bbox_to_anchor=(1.01, 0.5))
         fig.tight_layout()
-        fig.savefig(FIG / "fig_weights.pdf")
+        fig.savefig(FIG / "fig_weights.pdf", metadata={"CreationDate": None})
     # 5: the pre-decoder pipeline against both baselines, every point, by the error rate of plain matching
     fig, axs = plt.subplots(1, 2, figsize=(7.0, 2.5), sharey=True)
     for ax, d in zip(axs, (3, 5)):
@@ -246,7 +246,7 @@ def figures(rows, devs, card):
     axs[0].set_ylabel("failure ratio (< 1: pre-decoder better)")
     axs[0].legend(frameon=False)
     fig.tight_layout()
-    fig.savefig(FIG / "fig_baselines.pdf")
+    fig.savefig(FIG / "fig_baselines.pdf", metadata={"CreationDate": None})
     # 4: card throughput and latency against d
     perf = [p for c in card for p in c.get("perf", [])]
     if perf:
@@ -261,7 +261,7 @@ def figures(rows, devs, card):
         ax2.set_yscale("log")
         ax2.set_ylabel("latency of one window (ms)", color="C3")
         fig.tight_layout()
-        fig.savefig(FIG / "fig_card.pdf")
+        fig.savefig(FIG / "fig_card.pdf", metadata={"CreationDate": None})
 
 
 def latex_tables(rows, devs, card, cpu):
