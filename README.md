@@ -1,3 +1,5 @@
+> **Note (2026-11-09):** the code, data and reproduction scripts of this work are now maintained in [nasir26/u55c-neural-predecoder](https://github.com/nasir26/u55c-neural-predecoder) (currently private, to be published after review). This repository stays as it is for reference.
+
 # Calibration aware neural pre-decoding on one Alveo U55C
 
 Author: Nasir Ali, C-DAC Noida.
